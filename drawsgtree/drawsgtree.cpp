@@ -12,7 +12,7 @@
  * See the GNU General Public License for more details.
  * The full text is available at http:
  *
- * Last update: April 23, 2022
+ * Last update: May 29, 2022
  *
  */
 
@@ -560,7 +560,7 @@ void help() {
   std::cout << "                               (E. Kunz: Uber die Klassifikation numerischer Halbgruppen, Regensburger Mathematische Schriften, 1987" << std::endl;
   std::cout << "                                J.C. Rosales, P.A. Garcia-Sanchez, J.I. Garcia-Garcia, M.B. Branco: Systems of inequalities and numerical semigroups, J. Lond. Math. Soc., 2002" << std::endl;
   std::cout << "                                N. Kaplan, K. O'Neill: Numerical semigroups, polyhedra, and posets I: the group cone, Combinatorial Theory, 2021)" << std::endl;
-  std::cout << "     -n infinitechainst:   draw the infinite chains in the semigroup tree" << std::endl;
+  std::cout << "     -n infinitechains:   draw the infinite chains in the semigroup tree" << std::endl;
   std::cout << "                               (M. Bras-Amoros, S. Bulygin: Towards a better understanding of the semigroup tree, Semigroup Forum, 2009)" << std::endl;
   std::cout << "  -incremental          incremental with genus" << std::endl;
   std::cout << "  -inputfile            input file (not compiling without a calling file)" << std::endl;
@@ -577,11 +577,11 @@ void help() {
   std::cout << "           ./drawsgtree -g5 -n gapset -vertical" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n gapseedbitstream -n list -plain" << std::endl;
   std::cout << "           ./drawsgtree -g25 -n seedstable -vertical 0 8 16 18 19 24 26 27 30" << std::endl;
-  std::cout << "           ./drawsgtree -g9 -n aperykunzposet 0 6 7 9" << std::endl;
+  std::cout << "           ./drawsgtree -g10 -n aperykunzposet 0 6 7 9" << std::endl;
   std::cout << "           ./drawsgtree -g8 -m4 -n dyckhook" << std::endl;
   std::cout << "           ./drawsgtree -g11 -n infinitechains" << std::endl;
   std::cout << "           ./drawsgtree -g11 -n infinitechains -d 3." << std::endl;
-  std::cout << "           ./drawsgtree -m3 -g8 -n list -n gapset -n minimalgenerators -n gapseedbitstream -n aperykunzposet -d 2. -framednodes" << std::endl;
+  std::cout << "           ./drawsgtree -m3 -g8 -n list -n gapset -n minimalgenerators -n gapseedbitstream -n aperykunzposet -framednodes" << std::endl;
   std::cout << "           ./drawsgtree -g15 0 7 9 11 14 16 18 20 21 22 23 25 27 -n aperykunzposet" << std::endl;
   std::cout << "           ./drawsgtree -g33 0 12 19 24 28 31 34 36 38 40 42 43 45 -n dyckhook" << std::endl;
 }
@@ -733,9 +733,12 @@ int main(int argc, char *argv[]) {
   if (argc > optind) {
     for (indexc = 0; indexc < argc - optind; indexc++) {
       N[indexc] = atoi(argv[optind + indexc]);
-      std::cout << "N[" << indexc << "]=" << N[indexc] << std::endl;
     }
     indexc--;
+    while (indexc > 0 && (N[indexc] == (N[indexc - 1] + 1)))
+      indexc--;
+    for (j = 0; j <= indexc; j++)
+      std::cout << "N[" << j << "]=" << N[j] << std::endl;
     if (m_set and m != N[1]) {
       std::cerr << "the given semigroup does not have the specified multiplicity" << std::endl;
       return 1;
