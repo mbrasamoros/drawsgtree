@@ -569,10 +569,13 @@ void help() {
   std::cout << "  -blackandwhite        graph without colors" << std::endl;
   std::cout << "  -framednodes          frame each tree node" << std::endl;
   std::cout << "  -d <float>            enlarge distance between generations by the specified factor" << std::endl;
+  std::cout << "  -s <float>            enlarge distance between siblings by the specified factor" << std::endl;
   std::cout << "  -rotated              rotated 90 degrees" << std::endl;
   std::cout << "  0 N[1] N[2] ... N[k]  root at the semigroup {0,N[1],N[2],N[k],N[k]+1,N[k]+2,...}" << std::endl;
   std::cout << "\nexamples:  ./drawsgtree -g5 -n list" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n list -incremental" << std::endl;
+  std::cout << "           ./drawsgtree -g7 -n list 0 5 8 -s .37 -d 1.2" << std::endl;
+
   std::cout << "           ./drawsgtree -g4 -n minimalgenerators -vertical" << std::endl;
   std::cout << "           ./drawsgtree -g5 -n gapset -vertical" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n gapseedbitstream -n list -plain" << std::endl;
@@ -594,14 +597,14 @@ int main(int argc, char *argv[]) {
   int g, maxg, m, c, indexc, j, initialj;
   int N[50], G[50], S[50];
   long long int count[20];
-  float fac, facopt = 1.;
+  float fac, facopt = 1., facsib = 1.;
   char filename[250], filenameaux[250];
   FILE *fout;
   time_t seconds, secondsafter;
   bool g_set = false;
   bool m_set = false;
 
-  while ((j = getopt(argc, argv, ":hg:m:i:v:p:d:f:b:r:n:")) != -1) {
+  while ((j = getopt(argc, argv, ":hg:m:i:v:p:d:s:f:b:r:n:")) != -1) {
     switch (j) {
     case 'h':
       help();
@@ -650,9 +653,14 @@ int main(int argc, char *argv[]) {
         return 1;
       }
       break;
+
     case 'd':
       facopt = atof(optarg);
       break;
+    case 's':
+      facsib = atof(optarg);
+      break;
+
     case 'f':
       if (strcmp(optarg, "ramednodes") == 0)
         framednodes = true;
@@ -865,7 +873,7 @@ int main(int argc, char *argv[]) {
       fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\scalebox{2.7}{{\\color{blue}\\dots}}}");
     }
   } else {
-    fprintf(fout, "\\providecommand\\circledcolorednumb{}\\renewcommand\\circledcolorednumb[2]{\\resizebox{%f\\textwidth}{!}{\\tikz[baseline=(char.center)]{\\node[shape = circle,draw, inner sep = 2pt,fill=#1](char)    {\\phantom{00}};\\node[anchor=center] at (char.center) {\\makebox(0,0){\\large{#2}}};}}}", fac * (maxg - c + indexc) / (27. * facopt * maxg));
+    fprintf(fout, "\\providecommand\\circledcolorednumb{}\\renewcommand\\circledcolorednumb[2]{\\resizebox{%f\\textwidth}{!}{\\tikz[baseline=(char.center)]{\\node[shape = circle,draw, inner sep = 2pt,fill=#1](char)    {\\phantom{00}};\\node[anchor=center] at (char.center) {\\makebox(0,0){\\large{#2}}};}}}", fac / facsib * (maxg - c + indexc) / (27. * facopt * maxg));
     fprintf(fout, "\\robustify{\\circledcolorednumb}");
     if (blackandwhite) {
       fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\circledcolorednumb{gray!40}{#1}}\n");
@@ -916,9 +924,9 @@ int main(int argc, char *argv[]) {
         fprintf(fout, "\\adjustbox{max width=\\textwidth,max height=.9\\textheight}");
     }
     if (vertical)
-      fprintf(fout, "{\\begin{tikzpicture}[grow=down,sibling distance=10mm]");
+      fprintf(fout, "{\\begin{tikzpicture}[grow=down,sibling distance=%fmm]", facsib * 10.);
     else
-      fprintf(fout, "{\\begin{tikzpicture}[grow'=right, sibling distance=6mm]");
+      fprintf(fout, "{\\begin{tikzpicture}[grow'=right, sibling distance=%fmm]", facsib * 6.);
     if (optiongapset)
       fprintf(fout, "\\tikzset{every tree node/.style={anchor=south}}");
     if (optionseedstable)
