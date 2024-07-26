@@ -417,7 +417,7 @@ int drawnodegapseedbitstream(int G[], int S[], int c, int m, int g, FILE *fout) 
     else
       fprintf(fout, "\\seed{%d}", i);
   }
-  for (i = c ; i < 2 * g + 2; i++) 
+  for (i = c; i < 2 * g + 2; i++)
     fprintf(fout, "\\phantom{\\nonseed{0}}");
   fprintf(fout, "\\\\\\phantom{\\nonseed{0}}");
   for (i = 0; i < c; i++) {
@@ -426,7 +426,7 @@ int drawnodegapseedbitstream(int G[], int S[], int c, int m, int g, FILE *fout) 
     else
       fprintf(fout, "\\nonseed{%d} ", i);
   }
-  for (i = c ; i < 2 * g + 2; i++) 
+  for (i = c; i < 2 * g + 2; i++)
     fprintf(fout, "\\phantom{\\nonseed{0}}");
   fprintf(fout, "\\end{array}$} ");
   return 0;
@@ -439,7 +439,7 @@ int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
     fprintf(fout, "{$\\bullet$} ");
     return 0;
   }
-  fprintf(fout,"{{\\bf \\begin{tabular}{|@{\\rule[-.15cm]{0pt}{.5cm}}*{%d}{M |}}",m);
+  fprintf(fout, "{{\\bf \\begin{tabular}{|@{\\rule[-.15cm]{0pt}{.5cm}}*{%d}{M |}}", m);
   jant = 0;
   firstrow = 1;
   i = 0;
@@ -457,14 +457,14 @@ int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
       j++;
     } else {
       if (firstrow)
-	firstrow=0;
+        firstrow = 0;
       else
-	fprintf(fout,"\\\\");
-      fprintf(fout,"\\hhline{|");
-      for(k=1;k<=max(j,jant);k++)
-	fprintf(fout,"-|");
-      fprintf(fout,"}\n");
-      fprintf(fout, " %s ",row);
+        fprintf(fout, "\\\\");
+      fprintf(fout, "\\hhline{|");
+      for (k = 1; k <= max(j, jant); k++)
+        fprintf(fout, "-|");
+      fprintf(fout, "}\n");
+      fprintf(fout, " %s ", row);
       if (S[i])
         sprintf(row, " \\coloredseed %d ", S[i]);
       else
@@ -473,16 +473,16 @@ int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
       j = 1;
     }
   if (!firstrow)
-    fprintf(fout,"\\\\");
-  fprintf(fout,"\\hhline{|");
-  for(k=1;k<=max(j,jant);k++)
-    fprintf(fout,"-|");
-  fprintf(fout,"}\n");
-  fprintf(fout, " %s \\\\",row);
-  fprintf(fout,"\\hhline{|");
-  for(k=1;k<=j;k++)
-    fprintf(fout,"-|");
-  fprintf(fout,"}\n");
+    fprintf(fout, "\\\\");
+  fprintf(fout, "\\hhline{|");
+  for (k = 1; k <= max(j, jant); k++)
+    fprintf(fout, "-|");
+  fprintf(fout, "}\n");
+  fprintf(fout, " %s \\\\", row);
+  fprintf(fout, "\\hhline{|");
+  for (k = 1; k <= j; k++)
+    fprintf(fout, "-|");
+  fprintf(fout, "}\n");
 
   fprintf(fout, "\\end{tabular}}} ");
 
@@ -495,7 +495,7 @@ int drawnodedyckhook(int G[], int c, int g, FILE *fout) {
     fprintf(fout, "{$\\bullet$} ");
     return 0;
   }
-  fprintf(fout,"{\\scalebox{1.75}{{\\bf \\begin{tabular}{|@{\\rule[-.15cm]{0pt}{.5cm}}*{%d}{M |}}",c-g);
+  fprintf(fout, "{\\scalebox{1.75}{{\\bf \\begin{tabular}{|@{\\rule[-.15cm]{0pt}{.5cm}}*{%d}{M |}}", c - g);
   fprintf(fout, "\\cline{1-%d}\n", c - g);
   for (b = c - 1; b >= 1; b--) {
     if (G[b - 1]) {
@@ -507,7 +507,7 @@ int drawnodedyckhook(int G[], int c, int g, FILE *fout) {
           j++;
         }
       }
-      fprintf(fout, "\\\\\\cline{1-%d}\n", j );
+      fprintf(fout, "\\\\\\cline{1-%d}\n", j);
     }
   }
   fprintf(fout, "\\end{tabular}}}} ");
@@ -748,6 +748,7 @@ void help() {
   std::cout << "     -e med                distinguish the chains of MED semigroups" << std::endl;
   std::cout << "                               (J.C. Rosales, P.A. Garcia-Sanchez, J.I. Garcia-Garcia, M.B. Branco: Numerical semigroups with maximal embedding dimension, Int. J. Commut. Rings, 2003)" << std::endl;
   std::cout << "     -e pattern            distinguish the semigroups admitting a strongly admissible pattern" << std::endl;
+  std::cout << "     <sign1>a1<sign2>a2..<signn> and use the pattern <sign1>a1x1+<sign2>a2x2+...+<signn>anxn" << std::endl;
   std::cout << "                               (M. Bras-Amoros, P.A. Garcia-Sanchez: Patterns on numerical semigroups, Linear Algebra App. 2006)" << std::endl;
   std::cout << "  -etrim                discard the non-distinguished edges together with all its descendants" << std::endl;
   std::cout << "  -incremental          incremental with genus" << std::endl;
@@ -760,7 +761,6 @@ void help() {
   std::cout << "  -s <float>            enlarge distance between siblings by the specified factor" << std::endl;
   std::cout << "  -rotated              rotated 90 degrees" << std::endl;
   std::cout << "  -o <filename>         output file name" << std::endl;
-  std::cout << "  <sign1>a1<sign2>a2..<signn>an  use the pattern <sign1>a1x1+<sign2>a2x2+...+<signn>anxn" << std::endl;
   std::cout << "  0 N[1] N[2] ... N[k]  root at the semigroup {0,N[1],N[2],N[k],N[k]+1,N[k]+2,...}" << std::endl;
   std::cout << "\nexamples:  ./drawsgtree -g5 -n list" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n list -incremental" << std::endl;
@@ -791,8 +791,8 @@ int main(int argc, char *argv[]) {
   int g, ming = 0, maxg, m, c, indexc = 0, j, initialj;
   int N[50], G[50], S[50];
   long long int count[20];
-  float fac, facopt = 1., facsib = 1., scale =1.;
-  char filename[250] = "", filenameaux[250] = "", filenameinput[250]="",patstring[100] = "";
+  float fac, facopt = 1., facsib = 1., scale = 1.;
+  char filename[250] = "", filenameaux[250] = "", filenameinput[250] = "", patstring[100] = "";
   FILE *fout;
   time_t seconds, secondsafter;
   bool g_set = false;
@@ -855,9 +855,9 @@ int main(int argc, char *argv[]) {
       facsib = atof(optarg);
       break;
     case 'x':
-      scaled=true;
+      scaled = true;
       scale = atof(optarg);
-      break;     
+      break;
     case 'f':
       if (strcmp(optarg, "ramednodes") == 0)
         framednodes = true;
@@ -884,7 +884,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'o':
       defaultfilename = false;
-      strcpy(filenameinput,optarg);
+      strcpy(filenameinput, optarg);
       break;
     case 'n':
       if (strcmp(optarg, "list") == 0) {
@@ -1158,9 +1158,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if(!defaultfilename)
-    strcpy(filename,filenameinput);
-  
+  if (!defaultfilename)
+    strcpy(filename, filenameinput);
+
   fout = fopen(filename, "w");
   fprintf(fout, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%%\n%%\n");
   fprintf(fout, "%%     File generated with https://github.com/mbrasamoros/drawsgtree");
@@ -1170,25 +1170,22 @@ int main(int argc, char *argv[]) {
   fprintf(fout, "\n%%\n%%\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n");
   fac = facopt * 1.75;
   if (standalone) {
-    if (optionseedstable||optiondyckhook)
-      {
-	if(incremental)
-	  fprintf(fout, "\\documentclass[table]{article}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox,xcolor,array,hhline}\n\\pagestyle{empty}\n");
-	else 
-	  fprintf(fout, "\\documentclass[table]{standalone}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox,xcolor,array,hhline}\n\\pagestyle{empty}\n");
-      }
-    else
-      {
-	if(incremental)
-	  fprintf(fout, "\\documentclass{article}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox}\n\\pagestyle{empty}\n");
-	else
-	  fprintf(fout, "\\documentclass{standalone}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox}\n\\pagestyle{empty}\n");
-      }
+    if (optionseedstable || optiondyckhook) {
+      if (incremental)
+        fprintf(fout, "\\documentclass[table]{article}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox,xcolor,array,hhline}\n\\pagestyle{empty}\n");
+      else
+        fprintf(fout, "\\documentclass[table]{standalone}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox,xcolor,array,hhline}\n\\pagestyle{empty}\n");
+    } else {
+      if (incremental)
+        fprintf(fout, "\\documentclass{article}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox}\n\\pagestyle{empty}\n");
+      else
+        fprintf(fout, "\\documentclass{standalone}\n\\usepackage{tikz,tikz-qtree,tikz-qtree-compat,fullpage,adjustbox}\n\\pagestyle{empty}\n");
+    }
     if (!plain)
       fprintf(fout, "\\usepackage{pst-plot}\n\\usepackage{etoolbox}\n");
   }
-  if(optionseedstable || optiondyckhook)
-    fprintf(fout,"\\newcolumntype{M}{>{\\centering\\arraybackslash}m{.5cm}}\\setlength\\tabcolsep{0pt}\\setlength\\arrayrulewidth{1pt}");
+  if (optionseedstable || optiondyckhook)
+    fprintf(fout, "\\newcolumntype{M}{>{\\centering\\arraybackslash}m{.5cm}}\\setlength\\tabcolsep{0pt}\\setlength\\arrayrulewidth{1pt}");
   if (plain) {
     if (blackandwhite) {
       fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\scalebox{2.3}{{\\bf#1\\ }}}\n");
@@ -1252,7 +1249,7 @@ int main(int argc, char *argv[]) {
         fprintf(fout, "\\mbox{}\\vfill\\resizebox{%f\\textwidth}{!}", 1. * j / maxg);
     } else {
       if (scaled)
-	fprintf(fout,"\\scalebox{%f}{",scale);
+        fprintf(fout, "\\scalebox{%f}{", scale);
       if (rotated)
         fprintf(fout, "\\adjustbox{max width=\\textwidth,max height=.9\\textheight,angle=90}");
       else
@@ -1272,14 +1269,14 @@ int main(int argc, char *argv[]) {
     if (optionaperykunzposet)
       fprintf(fout, "\\tikzset{level 1+/.style={level distance=%fcm}}", 10. * fac);
     else
-      fprintf(fout, "\\tikzset{level 1/.style={level distance=%fcm}}\\tikzset{level 2/.style={level distance=%fcm}}\\tikzset{level 3/.style={level distance=%fcm}}\\tikzset{level 4/.style={level distance=%fcm}}\\tikzset{level 5/.style={level distance=%fcm}}\\tikzset{level 6/.style={level distance=%fcm}}\\tikzset{level 7+/.style={level distance=%fcm}}", 4. * fac, 5. * fac, 6.5 * fac, 8. * fac, 10. * fac, 10.2*fac, 10.8*fac);
+      fprintf(fout, "\\tikzset{level 1/.style={level distance=%fcm}}\\tikzset{level 2/.style={level distance=%fcm}}\\tikzset{level 3/.style={level distance=%fcm}}\\tikzset{level 4/.style={level distance=%fcm}}\\tikzset{level 5/.style={level distance=%fcm}}\\tikzset{level 6/.style={level distance=%fcm}}\\tikzset{level 7+/.style={level distance=%fcm}}", 4. * fac, 5. * fac, 6.5 * fac, 8. * fac, 10. * fac, 10.2 * fac, 10.8 * fac);
     fprintf(fout, "\\Tree");
     nongapstoG(N, c, G);
     GtoS(G, c, S);
     count[j] = descendants(N, G, S, c, indexc, c - indexc, ming, j, m_set, fout);
     fprintf(fout, "\\end{tikzpicture}}");
-    if(!incremental && scaled)
-      fprintf(fout,"}");
+    if (!incremental && scaled)
+      fprintf(fout, "}");
     fprintf(fout, "\n\n");
     if (incremental)
       fprintf(fout, "\\newpage");
