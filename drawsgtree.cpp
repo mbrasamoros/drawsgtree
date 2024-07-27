@@ -747,8 +747,8 @@ void help() {
   std::cout << "                                M. Rosas-Ribeiro, M. Bras-Amoros: Infinite chains in the tree of numerical semigroups. Submitted, 2023)" << std::endl;
   std::cout << "     -e med                distinguish the chains of MED semigroups" << std::endl;
   std::cout << "                               (J.C. Rosales, P.A. Garcia-Sanchez, J.I. Garcia-Garcia, M.B. Branco: Numerical semigroups with maximal embedding dimension, Int. J. Commut. Rings, 2003)" << std::endl;
-  std::cout << "     -e pattern            distinguish the semigroups admitting a strongly admissible pattern" << std::endl;
-  std::cout << "     <sign1>a1<sign2>a2..<signn> and use the pattern <sign1>a1x1+<sign2>a2x2+...+<signn>anxn" << std::endl;
+  std::cout << "     -e pattern <sign1>a1<sign2>a2..<signn>" << std::endl;
+  std::cout << "                           distinguish the semigroups admitting the (strongly admissible) pattern <sign1>a1x1+<sign2>a2x2+...+<signn>anxn" << std::endl;
   std::cout << "                               (M. Bras-Amoros, P.A. Garcia-Sanchez: Patterns on numerical semigroups, Linear Algebra App. 2006)" << std::endl;
   std::cout << "  -etrim                discard the non-distinguished edges together with all its descendants" << std::endl;
   std::cout << "  -incremental          incremental with genus" << std::endl;
