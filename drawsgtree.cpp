@@ -1,10 +1,9 @@
 /*
  *
- * Copyright (c) 2022 
- * Maria Bras-Amoros
+ * Copyright (c) 2022, 2023, 2024 Maria Bras-Amoros
  *
  * Distributed under the terms of the GNU General Public License
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -12,7 +11,7 @@
  * See the GNU General Public License for more details.
  * The full text is available at http:
  *
- * Last update: August 10, 2023
+ * Last update: August 1, 2024
  *
  */
 
@@ -53,6 +52,9 @@ bool optionpsystemgenerators = false;
 
 bool distinguishededges = false;
 bool trimnondistinguishededges = false;
+
+bool ordinarizationtree = false;
+bool quasiordinarizationforest = false;
 
 bool optioninfinitechains = false;
 bool optionmed = false;
@@ -311,31 +313,68 @@ int admits(int N[], int c, int indexc, int p[], int n) {
 
 int drawnodelist(int G[], int S[], int c, int m, int g, FILE *fout) {
   int i;
-  fprintf(fout, "{$\\nongap{0}");
-  for (i = 1; i < c; i++)
-    if (!G[i - 1])
-      fprintf(fout, "\\nongap{%d}", i);
-    else
-      fprintf(fout, "\\gap{%d}", i);
-  if (g > 0) {
-    if (S[0])
-      fprintf(fout, "\\generator{%d}", c);
-    else
-      fprintf(fout, "\\nongap{%d}", c);
-    for (i = c + 1; i < c + m && i < 2 * g + 2; i++) {
-      if (S[i - c])
-        fprintf(fout, "\\generator{%d}", i);
-      else
-        fprintf(fout, "\\nongap{%d}", i);
+  if (quasiordinarizationforest) {
+    int sc = c - 2;
+    int check;
+    if (!G[sc - 1]) {
+      while (!G[sc - 2])
+        sc--;
     }
-    for (i = c + m; i < 2 * g + 2; i++)
+
+    fprintf(fout, "{$\\nongap{0}");
+    for (i = 1; i < sc; i++)
+      if (!G[i - 1])
+        fprintf(fout, "\\nongap{%d}", i);
+      else
+        fprintf(fout, "\\gap{%d}", i);
+    if (G[sc - 1])
+      fprintf(fout, "\\gap{%d}", sc);
+    else {
+      for (i = sc; i < c - 1; i++) {
+        check = 1;
+        for (int j = m; j <= i - m && check; j++) {
+          if (!G[j - 1] && !G[i - j - 1])
+            check = 0;
+        }
+        if (check)
+          fprintf(fout, "\\generator{%d}", i);
+        else
+          fprintf(fout, "\\nongap{%d}", i);
+      }
+    }
+    fprintf(fout, "\\gap{%d}", c - 1);
+    for (i = c; i < 2 * g + 2; i++) {
       fprintf(fout, "\\nongap{%d}", i);
+    }
     fprintf(fout, "\\dotscircles");
+    fprintf(fout, "$} ");
   } else {
-    fprintf(fout, "\\generator{1}\\nongap{2}");
-    fprintf(fout, "\\dotscircles");
+    fprintf(fout, "{$\\nongap{0}");
+    for (i = 1; i < c; i++)
+      if (!G[i - 1])
+        fprintf(fout, "\\nongap{%d}", i);
+      else
+        fprintf(fout, "\\gap{%d}", i);
+    if (g > 0) {
+      if (S[0])
+        fprintf(fout, "\\generator{%d}", c);
+      else
+        fprintf(fout, "\\nongap{%d}", c);
+      for (i = c + 1; i < c + m && i < 2 * g + 2; i++) {
+        if (S[i - c])
+          fprintf(fout, "\\generator{%d}", i);
+        else
+          fprintf(fout, "\\nongap{%d}", i);
+      }
+      for (i = c + m; i < 2 * g + 2; i++)
+        fprintf(fout, "\\nongap{%d}", i);
+      fprintf(fout, "\\dotscircles");
+    } else {
+      fprintf(fout, "\\generator{1}\\nongap{2}");
+      fprintf(fout, "\\dotscircles");
+    }
+    fprintf(fout, "$} ");
   }
-  fprintf(fout, "$} ");
   return 0;
 }
 
@@ -391,7 +430,8 @@ int drawnodegapset(int G[], int c, int m, int g, FILE *fout) {
       if (G[m * i + j - 1] && m * i + j - 1 < c) {
         if (!plain)
           fprintf(fout, "\\gapingapset{%d}", m * i + j);
-        sprintf(strtemp, "%s%d", strtemp, j);
+        memcpy(straux, strtemp, strlen(strtemp) + 1);
+        sprintf(strtemp, "%s%d", straux, j);
       } else {
         if (!plain)
           fprintf(fout, "\\nongapingapset{%d}", m * i + j);
@@ -434,7 +474,8 @@ int drawnodegapseedbitstream(int G[], int S[], int c, int m, int g, FILE *fout) 
 
 int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
   int i, j, k, jant, firstrow;
-  char row[200];
+  char row[200], straux[200];
+
   if (g == 0) {
     fprintf(fout, "{$\\bullet$} ");
     return 0;
@@ -450,10 +491,13 @@ int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
   j = 1;
   for (i = 1; i < c; i++)
     if (G[i - 1]) {
-      if (S[i])
-        sprintf(row, "%s & \\coloredseed %d ", row, S[i]);
-      else
-        sprintf(row, "%s & \\cellcolor{white} %d ", row, S[i]);
+      if (S[i]) {
+        memcpy(straux, row, strlen(row) + 1);
+        sprintf(row, "%s & \\coloredseed %d ", straux, S[i]);
+      } else {
+        memcpy(straux, row, strlen(row) + 1);
+        sprintf(row, "%s & \\cellcolor{white} %d ", straux, S[i]);
+      }
       j++;
     } else {
       if (firstrow)
@@ -586,7 +630,7 @@ int drawnodepsystemgenerators(int N[], int G[], int S[], int c, int indexc, int 
     return 0;
   }
 
-  fprintf(fout, "{\\scalebox{5.}{$\\langle %d", m); //Corollary 15
+  fprintf(fout, "{\\scalebox{5.}{$\\langle %d", m); // Corollary 15
   for (i = m + 1; i < c; i++) {
     if (!G[i - 1]) {
       isgenerator = 1;
@@ -718,6 +762,186 @@ int descendants(int N[], int G[], int S[], int c, int indexc, int g, int ming, i
   return numdescendants;
 }
 
+int ord_descendants(int N[], int G[], int M[], int F[], int c, int g, int m, FILE *fout) {
+  int i, j, k, check, numdescendants;
+  int newN[MAX], newM[MAX], newF[MAX], auxF[MAX], S[MAX];
+
+  if (distinguishededges) {
+    if ((optioninfinitechains && belongstoinfinitechain(G, c, N[1], c - g)) || (optionpattern && admits(N, c, c - g, pattern, patternlength))) {
+      if (blackandwhite)
+        fprintf(fout, " \\edge [black,thick]; ");
+      else
+        fprintf(fout, " \\edge [red]; ");
+    } else {
+      if (trimnondistinguishededges)
+        return numdescendants;
+      fprintf(fout, " \\edge [gray!50]; ");
+    }
+  }
+
+  fprintf(fout, "[.");
+
+  GtoS(G, c, S);
+  drawnode(N, G, S, c, m, g, fout);
+  numdescendants = 1;
+
+  for (i = c; i < c + m; i++) {
+    if (M[i]) {
+      G[i - 1] = 1;
+      for (k = 1; k <= i - c; k++)
+        auxF[k] = 0;
+      for (k = i - c + 1; k < m; k++)
+        auxF[k] = F[k];
+      auxF[i - m] = 0;
+      if (i % 2 == 0)
+        auxF[i / 2] = 0;
+      if (i % 3 == 0)
+        auxF[i / 3] = 0;
+      for (k = 1; k < m; k++)
+        if (!G[i - k - 1])
+          auxF[k] = 0;
+      for (j = 1; j < m; j++) {
+        if (auxF[j] && G[i - j - 1] && !(i == 2 * j) && !(i == 3 * j)) {
+          G[j - 1] = 0;
+          for (int k = 0; k < j; k++)
+            newF[k] = auxF[k];
+          newF[i - j] = 0;
+          for (k = 1; k < j; k++)
+            if (G[j + k - 1] == 1)
+              newF[k] = 0;
+          if (j % 2 == 0 && (3 * j / 2 >= (i + 1) || !G[3 * j / 2 - 1]) && G[(i + 1) - 1 - j / 2 - 1] && G[i - j / 2 - 1]) {
+            check = 1;
+            for (k = j + 1; check && k < i - j / 2; k++)
+              if (!G[k - 1] && G[j / 2 + k - 1])
+                check = 0;
+            if (check)
+              newF[j / 2] = 1;
+          }
+          for (k = 0; k < i + j; k++)
+            newM[k] = M[k];
+          for (k = i + j; k < MAX; k++)
+            newM[k] = 0;
+          newM[2 * j] = 0;
+          for (k = i + 1; k < i + j; k++) {
+            if (!G[k - j - 1])
+              newM[k] = 0;
+          }
+          newM[i + j] = 1;
+          for (k = j; k < i; k++)
+            if (!G[k - 1] && !G[i + j - k - 1])
+              newM[i + j] = 0;
+          newN[0] = 0;
+          newN[1] = j;
+          for (k = 1; k < c - g; k++)
+            newN[k + 1] = N[k];
+          while (newN[k] < i) {
+            newN[k + 1] = newN[k] + 1;
+            k++;
+          }
+          newN[k] = i + 1;
+          numdescendants += ord_descendants(newN, G, newM, newF, i + 1, g, j, fout);
+          G[j - 1] = 1;
+        }
+      }
+      G[i - 1] = 0;
+    }
+  }
+
+  fprintf(fout, "]");
+
+  return numdescendants;
+}
+
+int quasiord_descendants(int N[], int G[], int M[], int F[], int c, int sc, int g, int m, FILE *fout) {
+  int i, j, k, check, checkf, numdescendants;
+  int newN[MAX], newM[MAX], newF[MAX], auxF[MAX], S[MAX];
+
+  if (distinguishededges) {
+    if ((optioninfinitechains && belongstoinfinitechain(G, c, N[1], c - g)) || (optionpattern && admits(N, c, c - g, pattern, patternlength))) {
+      if (blackandwhite)
+        fprintf(fout, " \\edge [black,thick]; ");
+      else
+        fprintf(fout, " \\edge [red]; ");
+    } else {
+      if (trimnondistinguishededges)
+        return numdescendants;
+      fprintf(fout, " \\edge [gray!50]; ");
+    }
+  }
+
+  fprintf(fout, "[.");
+
+  GtoS(G, c, S);
+  drawnode(N, G, S, c, m, g, fout);
+  numdescendants = 1;
+
+  if (!G[c - 2 - 1]) {
+    for (i = sc; i < c - 1; i++) {
+      if (M[i]) {
+        G[i - 1] = 1;
+        for (k = 0; k < m; k++)
+          auxF[k] = F[k];
+        checkf = c - 1 - i;
+        if (!G[2 * checkf - 1] && (3 * checkf >= c || !G[3 * checkf - 1]) && G[i + sc - c - 1]) {
+          check = 1;
+          for (k = m; check && k < i + sc - c; k++)
+            if (!G[k - 1] && G[checkf + k - 1])
+              check = 0;
+          if (check)
+            auxF[checkf] = 1;
+        }
+        auxF[i - m] = 0;
+        for (k = i - sc + 1; k < m; k++)
+          if (!G[i - k - 1])
+            auxF[k] = 0;
+        if (i % 2 == 0)
+          auxF[i / 2] = 0;
+        if (i % 3 == 0)
+          auxF[i / 3] = 0;
+        for (j = 1; j < m; j++) {
+          if (auxF[j]) {
+            G[j - 1] = 0;
+            for (k = 0; k < j; k++)
+              newF[k] = auxF[k];
+            newF[c - 1 - j] = 0;
+            newF[i - j] = 0;
+            for (k = 1; k < j && k < sc - j; k++)
+              if (!G[j + k - 1] == 0)
+                newF[k] = 0;
+            if (j % 2 == 0 && (3 * j / 2 >= c || !G[3 * j / 2 - 1]) && G[c - 1 - j / 2 - 1] && G[i - j / 2 - 1]) {
+              check = 1;
+              for (k = j + 1; check && k < i - j / 2; k++)
+                if (!G[k - 1] && G[j / 2 + k - 1])
+                  check = 0;
+              if (check)
+                newF[j / 2] = 1;
+            }
+            for (k = 0; k < c - 1; k++)
+              newM[k] = M[k];
+            newM[2 * j] = 0;
+            for (k = i + 1; k < c - 1; k++)
+              if (!G[k - j - 1])
+                newM[k] = 0;
+            newN[0] = 0;
+            newN[1] = j;
+            for (k = 1; k < i + 1 - g; k++)
+              newN[k + 1] = N[k];
+            for (k = i + 1 - g + 1; k <= c - g; k++)
+              newN[k] = N[k];
+            numdescendants += quasiord_descendants(newN, G, newM, newF, c, i + 1, g, j, fout);
+            G[j - 1] = 1;
+          }
+        }
+        G[i - 1] = 0;
+      }
+    }
+  }
+
+  fprintf(fout, "]");
+
+  return numdescendants;
+}
+
 void help() {
   std::cout << "./sgroup [options]      generate a latex file with the semigroup tree" << std::endl;
   std::cout << "  -h                    display this help" << std::endl;
@@ -751,6 +975,11 @@ void help() {
   std::cout << "                           distinguish the semigroups admitting the (strongly admissible) pattern <sign1>a1x1+<sign2>a2x2+...+<signn>anxn" << std::endl;
   std::cout << "                               (M. Bras-Amoros, P.A. Garcia-Sanchez: Patterns on numerical semigroups, Linear Algebra App. 2006)" << std::endl;
   std::cout << "  -etrim                discard the non-distinguished edges together with all its descendants" << std::endl;
+  std::cout << "  -t [option]           alternative tree" << std::endl;
+  std::cout << "     -t ordinarization" << std::endl;
+  std::cout << "                               (M. Bras-Amoros: The ordinarization transform of a numerical semigroup and semigroups with a large number of intervals, J. of Pure and App. Algebra, 2012)" << std::endl;
+  std::cout << "     -t quasiordinarization" << std::endl;
+  std::cout << "                               (M. Bras-Amoros, H. Perez-Roses, J. M. Serradilla-Merinero: Quasi-ordinarization transform of a numerical semigroup, Symmetry, 2021)" << std::endl;
   std::cout << "  -incremental          incremental with genus" << std::endl;
   std::cout << "  -inputfile            input file (not compiling without a calling file)" << std::endl;
   std::cout << "  -vertical             vertical tree growing down" << std::endl;
@@ -765,15 +994,14 @@ void help() {
   std::cout << "\nexamples:  ./drawsgtree -g5 -n list" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n list -incremental" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n list 0 5 8 -s .37 -d 1.2" << std::endl;
-
   std::cout << "           ./drawsgtree -g4 -n minimalgenerators -vertical" << std::endl;
   std::cout << "           ./drawsgtree -g5 -n gapset -vertical" << std::endl;
   std::cout << "           ./drawsgtree -g7 -n gapseedbitstream -n list -plain" << std::endl;
   std::cout << "           ./drawsgtree -g25 -n seedstable -vertical 0 8 16 18 19 24 26 27 30" << std::endl;
   std::cout << "           ./drawsgtree -g10 -n aperykunzposet 0 6 7 9" << std::endl;
   std::cout << "           ./drawsgtree -g8 -m4 -n dyckhook" << std::endl;
-  std::cout << "           ./drawsgtree -g11 -e infinitechains" << std::endl;
-  std::cout << "           ./drawsgtree -g11 -e infinitechains -d 3." << std::endl;
+  std::cout << "           ./drawsgtree -g10 -e infinitechains" << std::endl;
+  std::cout << "           ./drawsgtree -g10 -e infinitechains -d 3." << std::endl;
   std::cout << "           ./drawsgtree -g42 -m6 -e infinitechains -etrim -d .2" << std::endl;
   std::cout << "           ./drawsgtree -g6 -e med -n minimalgenerators" << std::endl;
   std::cout << "           ./drawsgtree -g5 -e pattern 1+1-1 -n minimalgenerators -e trim -vertical " << std::endl;
@@ -781,6 +1009,8 @@ void help() {
   std::cout << "           ./drawsgtree -m3 -g8 -n list -n gapset -n minimalgenerators -n gapseedbitstream -n aperykunzposet -framednodes" << std::endl;
   std::cout << "           ./drawsgtree -g15 0 7 9 11 14 16 18 20 21 22 23 25 27 -n aperykunzposet" << std::endl;
   std::cout << "           ./drawsgtree -g33 0 12 19 24 28 31 34 36 38 40 42 43 45 -n dyckhook" << std::endl;
+  std::cout << "           ./drawsgtree -g7 -t ordinarization -n list" << std::endl;
+  std::cout << "           ./drawsgtree -g7 -t quasiordinarization -n list" << std::endl;
 }
 
 void opt_g_missing() {
@@ -789,16 +1019,16 @@ void opt_g_missing() {
 
 int main(int argc, char *argv[]) {
   int g, ming = 0, maxg, m, c, indexc = 0, j, initialj;
-  int N[50], G[50], S[50];
+  int N[50], G[50], S[50], M[50], F[50];
   long long int count[20];
   float fac, facopt = 1., facsib = 1., scale = 1.;
-  char filename[250] = "", filenameaux[250] = "", filenameinput[250] = "", patstring[100] = "";
+  char filename[250] = "", filenameaux[250] = "", filenameinput[250] = "", patstring[100] = "", straux[100];
   FILE *fout;
   time_t seconds, secondsafter;
   bool g_set = false;
   bool m_set = false;
 
-  while ((j = getopt(argc, argv, ":hg:m:i:v:p:d:s:f:b:r:n:e:x:o:")) != -1) {
+  while ((j = getopt(argc, argv, ":hg:m:i:v:p:d:s:f:b:r:n:e:x:o:t:")) != -1) {
     switch (j) {
     case 'h':
       help();
@@ -927,22 +1157,44 @@ int main(int argc, char *argv[]) {
       break;
     case 'e':
       if (strcmp(optarg, "infinitechains") == 0) {
-        if (distinguishededges && !optioninfinitechains)
-          std::cerr << "can not combine distinctions " << (char)optopt << std::endl;
+        if (distinguishededges && !optioninfinitechains) {
+          std::cerr << "can not combine different edge distinctions " << (char)optopt << std::endl;
+          return 1;
+        }
+        if (quasiordinarizationforest) {
+          std::cerr << "can not combine infinite chains edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+          return 1;
+        }
         distinguishededges = true;
         optioninfinitechains = true;
         break;
       }
       if (strcmp(optarg, "med") == 0) {
-        if (distinguishededges && !optionmed)
-          std::cerr << "can not combine distinctions " << (char)optopt << std::endl;
+        if (distinguishededges && !optionmed) {
+          std::cerr << "can not combine different edge distinctions " << (char)optopt << std::endl;
+          return 1;
+        }
+        if (ordinarizationtree) {
+          std::cerr << "can not combine med edge distinction with the ordinarization tree " << (char)optopt << std::endl;
+          return 1;
+        }
+        if (quasiordinarizationforest) {
+          std::cerr << "can not combine med edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+          return 1;
+        }
         distinguishededges = true;
         optionmed = true;
         break;
       }
       if (strcmp(optarg, "pattern") == 0) {
-        if (distinguishededges && !optionpattern)
-          std::cerr << "can not combine distinctions " << (char)optopt << std::endl;
+        if (distinguishededges && !optionpattern) {
+          std::cerr << "can not combine different edge distinctions " << (char)optopt << std::endl;
+          return 1;
+        }
+        if (quasiordinarizationforest) {
+          std::cerr << "can not combine pattern edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+          return 1;
+        }
         distinguishededges = true;
         optionpattern = true;
         optionemptynodes = false;
@@ -953,8 +1205,36 @@ int main(int argc, char *argv[]) {
         trimnondistinguishededges = true;
         break;
       }
-      std::cerr << "unrecognized option -n" << optarg << std::endl;
+      std::cerr << "unrecognized option -e" << optarg << std::endl;
       return 1;
+      break;
+    case 't':
+      if (strcmp(optarg, "ordinarization") == 0 && quasiordinarizationforest == false) {
+        if (optionmed) {
+          std::cerr << "can not combine med edge distinction with the ordinarization tree " << (char)optopt << std::endl;
+          return 1;
+        }
+        ordinarizationtree = true;
+      } else {
+        if (strcmp(optarg, "quasiordinarization") == 0 && ordinarizationtree == false) {
+          if (optionmed) {
+            std::cerr << "can not combine med edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+            return 1;
+          }
+          if (optioninfinitechains) {
+            std::cerr << "can not combine infinite chains edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+            return 1;
+          }
+          if (optioninfinitechains) {
+            std::cerr << "can not combine pattern edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+            return 1;
+          }
+          quasiordinarizationforest = true;
+        } else {
+          std::cerr << "unrecognized option -t " << (char)optopt << optarg << std::endl;
+          return 1;
+        }
+      }
       break;
     case ':':
       std::cerr << "option -" << (char)optopt << " requires an operand" << std::endl;
@@ -984,8 +1264,7 @@ int main(int argc, char *argv[]) {
       patternlength = 0;
       strcpy(patstring, argv[optind]);
       if (patstring[0] == '-') {
-        std::cerr << "Non admissible pattern\n"
-                  << std::endl;
+        std::cerr << "Non admissible pattern" << std::endl;
         return 1;
       } else {
         if (patstring[0] != '+')
@@ -1001,31 +1280,40 @@ int main(int argc, char *argv[]) {
           else
             sign = 1;
         } else {
-          sprintf(termstring, "%s%c", termstring, patstring[i]);
+          memcpy(straux, termstring, strlen(termstring) + 1);
+          sprintf(termstring, "%s%c", straux, patstring[i]);
         }
       }
       pattern[patternlength] = sign * atoi(termstring);
       patternlength++;
       if (!isstronglyadmissible(pattern, patternlength)) {
-        std::cerr << "Non strongly admissible pattern\n"
-                  << std::endl;
+        std::cerr << "Non strongly admissible pattern" << std::endl;
         return 1;
       }
       strcpy(patpolynomial, "");
-      if (pattern[0] > 1)
-        sprintf(patpolynomial, "%s%d", patpolynomial, pattern[0]);
-      sprintf(patpolynomial, "%sx_{1}", patpolynomial);
+      if (pattern[0] > 1) {
+        memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
+        sprintf(patpolynomial, "%s%d", straux, pattern[0]);
+      }
+      memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
+      sprintf(patpolynomial, "%sx_{1}", straux);
       for (j = 1; j < patternlength; j++) {
         if (pattern[j]) {
-          if (pattern[j] > 0)
-            sprintf(patpolynomial, "%s+", patpolynomial);
-          if (pattern[j] == -1)
-            sprintf(patpolynomial, "%s-", patpolynomial);
-          else {
-            if (pattern[j] != 1)
-              sprintf(patpolynomial, "%s%d", patpolynomial, pattern[j]);
+          if (pattern[j] > 0) {
+            memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
+            sprintf(patpolynomial, "%s+", straux);
           }
-          sprintf(patpolynomial, "%sx_{%d}", patpolynomial, j + 1);
+          if (pattern[j] == -1) {
+            memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
+            sprintf(patpolynomial, "%s-", straux);
+          } else {
+            if (pattern[j] != 1) {
+              memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
+              sprintf(patpolynomial, "%s%d", straux, pattern[j]);
+            }
+          }
+          memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
+          sprintf(patpolynomial, "%sx_{%d}", straux, j + 1);
         }
       }
       std::cout << "pattern: " << patpolynomial << std::endl;
@@ -1057,7 +1345,22 @@ int main(int argc, char *argv[]) {
           std::cerr << "the final genus must be larger than the genus of the tree root" << std::endl;
           return 1;
         } else {
-          sprintf(filename, "semigrouptree-%d-root0", maxg);
+          if (ordinarizationtree) {
+            if (ming != maxg) {
+              std::cerr << "the genus of the tree root must equal the genus of the tree" << std::endl;
+              return 1;
+            }
+            sprintf(filename, "ordinarizationtree-%d-root0", maxg);
+          } else {
+            if (quasiordinarizationforest) {
+              if (ming != maxg) {
+                std::cerr << "the genus of the root must equal the genus of the forest" << std::endl;
+                return 1;
+              }
+              sprintf(filename, "quasiordinarizationforest-%d-root0", maxg);
+            } else
+              sprintf(filename, "semigrouptree-%d-root0", maxg);
+          }
           for (j = 1; j <= indexc; j++) {
             memcpy(filenameaux, filename, strlen(filename) + 1);
             sprintf(filename, "%s%d", filenameaux, N[j]);
@@ -1073,16 +1376,34 @@ int main(int argc, char *argv[]) {
         std::cerr << "the final genus must be at least the multiplicity minus one" << std::endl;
         return 1;
       }
+      if (ordinarizationtree) {
+        std::cerr << "the multiplicity can not be fixed in the ordinarization tree" << std::endl;
+        return 1;
+      }
+      if (quasiordinarizationforest) {
+        std::cerr << "the multiplicity can not be fixed in the quasiordinarization forest" << std::endl;
+        return 1;
+      }
       indexc = 1;
       N[0] = 0;
       N[1] = m;
       ming = m - 1;
       sprintf(filename, "semigrouptree-%d-root0%d.tex", maxg, m);
     } else {
-      indexc = 0;
       N[0] = 0;
-      N[1] = 1;
-      sprintf(filename, "semigrouptree-%d.tex", maxg);
+      if (ordinarizationtree) {
+        indexc = 1;
+        N[1] = maxg + 1;
+        sprintf(filename, "ordinarizationtree-%d.tex", maxg);
+      } else {
+        indexc = 0;
+        if (quasiordinarizationforest)
+          sprintf(filename, "ordinarizationforest-%d.tex", maxg);
+        else {
+          N[1] = 1;
+          sprintf(filename, "semigrouptree-%d.tex", maxg);
+        }
+      }
     }
   }
   c = N[indexc];
@@ -1163,12 +1484,16 @@ int main(int argc, char *argv[]) {
 
   fout = fopen(filename, "w");
   fprintf(fout, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%%\n%%\n");
+  fprintf(fout, "%%     Copyright (c) 2022, 2023, 2024 Maria Bras-Amoros\n");
   fprintf(fout, "%%     File generated with https://github.com/mbrasamoros/drawsgtree");
   fprintf(fout, "\n%%     ");
   for (j = 0; j < argc; j++)
     fprintf(fout, "%s ", argv[j]);
   fprintf(fout, "\n%%\n%%\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n");
   fac = facopt * 1.75;
+  if (ordinarizationtree || quasiordinarizationforest)
+    facsib *= .1;
+
   if (standalone) {
     if (optionseedstable || optiondyckhook) {
       if (incremental)
@@ -1183,6 +1508,7 @@ int main(int argc, char *argv[]) {
     }
     if (!plain)
       fprintf(fout, "\\usepackage{pst-plot}\n\\usepackage{etoolbox}\n");
+    fprintf(fout, "\\usetikzlibrary{positioning}\n");
   }
   if (optionseedstable || optiondyckhook)
     fprintf(fout, "\\newcolumntype{M}{>{\\centering\\arraybackslash}m{.5cm}}\\setlength\\tabcolsep{0pt}\\setlength\\arrayrulewidth{1pt}");
@@ -1191,38 +1517,55 @@ int main(int argc, char *argv[]) {
       fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\scalebox{2.3}{{\\bf#1\\ }}}\n");
       fprintf(fout, "\\providecommand\\gap{}\\renewcommand\\gap[1]{\\scalebox{2.3}{{\\color{gray!70}#1\\ }}}\n");
       fprintf(fout, "\\providecommand\\generator{}\\renewcommand\\generator[1]{\\scalebox{2.3}{{\\bf\\underline{#1}\\ }}}\n");
-      fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\scalebox{2.3}{{\\bf #1\\ }}}\n");
-      fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\scalebox{2.3}{{\\color{gray!70}#1\\ }}}\n");
-      fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\scalebox{2.3}{{\\color{blue}\\dots}}}\n");
+      fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\scalebox{2.3}{\\dots}}\n");
+      if (optiongapseedbitstream) {
+        fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\scalebox{2.3}{{\\bf #1\\ }}}\n");
+        fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\scalebox{2.3}{{\\color{gray!70}#1\\ }}}\n");
+      }
+
     } else {
       fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\scalebox{2.7}{{\\color{blue}#1\\ }}}\n");
       fprintf(fout, "\\providecommand\\gap{}\\renewcommand\\gap[1]{\\scalebox{2.7}{{\\color{gray!50}#1\\ }}}\n");
-      fprintf(fout, "\\providecommand\\generator{}\\renewcommand\\generator[1]{\\scalebox{2.7}{{\\color{orange}#1\\ }}}\n");
-      fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\scalebox{2.7}{{\\color{red}#1\\ }}}\n");
-      fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\scalebox{2.7}{{\\color{red!20}#1\\ }}}\n");
+      fprintf(fout, "\\providecommand\\generator{}\\renewcommand\\generator[1]{\\scalebox{2.7}{{\\color{orange!80}#1\\ }}}\n");
       fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\scalebox{2.7}{{\\color{blue}\\dots}}}\n");
+      if (optiongapseedbitstream) {
+        fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\scalebox{2.7}{{\\color{red}#1\\ }}}\n");
+        fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\scalebox{2.7}{{\\color{red!20}#1\\ }}}\n");
+      }
     }
   } else {
-    fprintf(fout, "\\providecommand\\circledcolorednumb{}\\renewcommand\\circledcolorednumb[2]{\\resizebox{%f\\textwidth}{!}{\\tikz[baseline=(char.center)]{\\node[shape = circle,draw, inner sep = 2pt,fill=#1](char)    {\\phantom{00}};\\node[anchor=center] at (char.center) {\\makebox(0,0){\\large{#2}}};}}}\n", fac / facsib * (0.1 + maxg - c + indexc) / (27. * facopt * maxg));
+    if (ordinarizationtree || quasiordinarizationforest) {
+      fprintf(fout, "\\providecommand\\circledcolorednumb{}\\renewcommand\\circledcolorednumb[2]{\\tikz[baseline=(char.center)]{\\node[shape = circle,draw, inner sep = 2pt,fill=#1](char)    {\\phantom{00}};\\node[anchor=center] at (char.center) {\\makebox(0,0){\\large{{\\sf #2}}}};}}\n");
+      fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{{\\bf \\dots}}\n");
+    } else {
+      fprintf(fout, "\\providecommand\\circledcolorednumb{}\\renewcommand\\circledcolorednumb[2]{\\resizebox{%f\\textwidth}{!}{\\tikz[baseline=(char.center)]{\\node[shape = circle,draw, inner sep = 2pt,fill=#1](char)    {\\phantom{00}};\\node[anchor=center] at (char.center) {\\makebox(0,0){\\large{{\\sf #2}}}};}}}\n", fac / facsib * (0.1 + maxg - c + indexc) / (27. * facopt * maxg));
+      fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\resizebox{%f\\textwidth}{!}{\\dots}}\n", fac / facsib * (0.1 + maxg - c + indexc) / (27. * facopt * maxg));
+    }
     fprintf(fout, "\\robustify{\\circledcolorednumb}\n");
     if (blackandwhite) {
       fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\circledcolorednumb{gray!40}{#1}}\n");
       fprintf(fout, "\\providecommand\\gap{}\\renewcommand\\gap[1]{\\circledcolorednumb{black!05}{\\phantom{#1}}}\n");
       fprintf(fout, "\\providecommand\\generator{}\\renewcommand\\generator[1]{\\circledcolorednumb{gray}{#1}}\n");
-      fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\circledcolorednumb{black!30}{#1}}\n");
-      fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\circledcolorednumb{black!05}{#1}}\n");
-      fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\resizebox{%f\\textwidth}{!}{\\dots}}\n", fac / facsib * (0.1 + maxg - c + indexc) / (27. * facopt * maxg));
-      fprintf(fout, "\\providecommand\\gapingapset{}\\renewcommand\\gapingapset[1]{\\circledcolorednumb{gray!50}{#1}}\n");
-      fprintf(fout, "\\providecommand\\nongapingapset{}\\renewcommand\\nongapingapset[1]{\\phantom{\\gapingapset{#1}}}\n");
+      if (optiongapseedbitstream) {
+        fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\circledcolorednumb{black!30}{#1}}\n");
+        fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\circledcolorednumb{black!05}{#1}}\n");
+      }
+      if (optiongapset) {
+        fprintf(fout, "\\providecommand\\gapingapset{}\\renewcommand\\gapingapset[1]{\\circledcolorednumb{gray!50}{#1}}\n");
+        fprintf(fout, "\\providecommand\\nongapingapset{}\\renewcommand\\nongapingapset[1]{\\phantom{\\gapingapset{#1}}}\n");
+      }
     } else {
-      fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\circledcolorednumb{yellow}{{\\bf#1}}}\n");
-      fprintf(fout, "\\providecommand\\gap{}\\renewcommand\\gap[1]{\\circledcolorednumb{white}{\\phantom{#1}}}\n");
-      fprintf(fout, "\\providecommand\\generator{}\\renewcommand\\generator[1]{\\circledcolorednumb{orange}{{\\bf#1}}}\n");
-      fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\circledcolorednumb{blue!30}{{\\bf#1}}}\n");
-      fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\circledcolorednumb{white}{{\\bf#1}}}\n");
-      fprintf(fout, "\\providecommand\\dotscircles{}\\renewcommand\\dotscircles{\\resizebox{%f\\textwidth}{!}{\\dots}}\n", fac / facsib * (0.1 + maxg - c + indexc) / (27. * facopt * maxg));
-      fprintf(fout, "\\providecommand\\gapingapset{}\\renewcommand\\gapingapset[1]{\\circledcolorednumb{green!30}{#1}}\n");
-      fprintf(fout, "\\providecommand\\nongapingapset{}\\renewcommand\\nongapingapset[1]{\\phantom{\\gapingapset{#1}}}\n");
+      fprintf(fout, "\\providecommand\\nongap{}\\renewcommand\\nongap[1]{\\circledcolorednumb{yellow}{#1}}\n");
+      fprintf(fout, "\\providecommand\\gap{}\\renewcommand\\gap[1]{\\circledcolorednumb{black!20}{\\phantom{#1}}}\n");
+      fprintf(fout, "\\providecommand\\generator{}\\renewcommand\\generator[1]{\\circledcolorednumb{orange!80}{#1}}\n");
+      if (optiongapseedbitstream) {
+        fprintf(fout, "\\providecommand\\seed{}\\renewcommand\\seed[1]{\\circledcolorednumb{blue!30}{#1}}\n");
+        fprintf(fout, "\\providecommand\\nonseed{}\\renewcommand\\nonseed[1]{\\circledcolorednumb{white}{#1}}\n");
+      }
+      if (optiongapset) {
+        fprintf(fout, "\\providecommand\\gapingapset{}\\renewcommand\\gapingapset[1]{\\circledcolorednumb{green!30}{#1}}\n");
+        fprintf(fout, "\\providecommand\\nongapingapset{}\\renewcommand\\nongapingapset[1]{\\phantom{\\gapingapset{#1}}}\n");
+      }
     }
   }
   if (optionseedstable) {
@@ -1250,10 +1593,6 @@ int main(int argc, char *argv[]) {
     } else {
       if (scaled)
         fprintf(fout, "\\scalebox{%f}{", scale);
-      if (rotated)
-        fprintf(fout, "\\adjustbox{max width=\\textwidth,max height=.9\\textheight,angle=90}");
-      else
-        fprintf(fout, "\\adjustbox{max width=\\textwidth,max height=.9\\textheight}");
     }
     if (vertical)
       fprintf(fout, "{\\begin{tikzpicture}[grow=down,sibling distance=%fmm]", facsib * 10.);
@@ -1268,13 +1607,108 @@ int main(int argc, char *argv[]) {
 
     if (optionaperykunzposet)
       fprintf(fout, "\\tikzset{level 1+/.style={level distance=%fcm}}", 10. * fac);
+    else {
+      if (ordinarizationtree || quasiordinarizationforest) {
+        fprintf(fout, "\\tikzset{level 1+/.style={level distance=12cm}}");
+      } else
+        fprintf(fout, "\\tikzset{level 1/.style={level distance=%fcm}}\\tikzset{level 2/.style={level distance=%fcm}}\\tikzset{level 3/.style={level distance=%fcm}}\\tikzset{level 4/.style={level distance=%fcm}}\\tikzset{level 5/.style={level distance=%fcm}}\\tikzset{level 6/.style={level distance=%fcm}}\\tikzset{level 7+/.style={level distance=%fcm}}", 4. * fac, 5. * fac, 6.5 * fac, 8. * fac, 10. * fac, 10.2 * fac, 10.8 * fac);
+    }
+    fprintf(fout, "\\node (arbre) at (current page.north) {");
+    if (rotated)
+      fprintf(fout, "\\adjustbox{max width=.9\\textwidth,max height=\\textheight,angle=90}");
     else
-      fprintf(fout, "\\tikzset{level 1/.style={level distance=%fcm}}\\tikzset{level 2/.style={level distance=%fcm}}\\tikzset{level 3/.style={level distance=%fcm}}\\tikzset{level 4/.style={level distance=%fcm}}\\tikzset{level 5/.style={level distance=%fcm}}\\tikzset{level 6/.style={level distance=%fcm}}\\tikzset{level 7+/.style={level distance=%fcm}}", 4. * fac, 5. * fac, 6.5 * fac, 8. * fac, 10. * fac, 10.2 * fac, 10.8 * fac);
-    fprintf(fout, "\\Tree");
-    nongapstoG(N, c, G);
-    GtoS(G, c, S);
-    count[j] = descendants(N, G, S, c, indexc, c - indexc, ming, j, m_set, fout);
-    fprintf(fout, "\\end{tikzpicture}}");
+      fprintf(fout, "\\adjustbox{max width=\\textwidth,max height=.9\\textheight}");
+    fprintf(fout, " { ");
+    if (quasiordinarizationforest && !c) {
+      fprintf(fout, "\\begin{tabular}{l}\n");
+      N[0] = 0;
+      N[1] = maxg + 1;
+      for (int i = 1; i <= maxg; i++)
+        G[i - 1] = 1;
+      G[maxg + 1] = 0;
+      fprintf(fout, "\n\n\\Tree");
+      count[j] += quasiord_descendants(N, G, M, F, maxg + 1, c - 2, maxg, maxg + 1, fout);
+      fprintf(fout, "\\\\\\\\\\\\\n");
+
+      for (c = maxg + 2; c <= 2 * maxg; c++) {
+        N[0] = 0;
+        for (int i = 1; i < maxg; i++) {
+          G[i - 1] = 1;
+        }
+        for (int i = maxg; i < c - 1; i++) {
+          N[i - maxg + 1] = i;
+          G[i - 1] = 0;
+          M[i] = 1;
+        }
+        G[c - 1 - 1] = 1;
+        G[c - 1] = 0;
+        N[c - maxg] = c;
+        for (int i = 0; i < maxg - maxg / 2; i++)
+          F[i] = 0;
+        for (int i = maxg - maxg / 2; i < maxg; i++)
+          F[i] = 1;
+        for (int i = maxg - maxg / 2; i < c - maxg; i++)
+          F[i] = 0;
+
+        if ((c - 1) % 2 == 0)
+          F[(c - 1) / 2] = 0;
+        fprintf(fout, "\n\n\\Tree");
+        count[j] += quasiord_descendants(N, G, M, F, c, maxg, maxg, maxg, fout);
+        fprintf(fout, "\\\\\\\\\\\\\n");
+      }
+      fprintf(fout, "\\end{tabular}\n");
+
+    } else {
+      fprintf(fout, "\\Tree");
+      nongapstoG(N, c, G);
+      GtoS(G, c, S);
+      if (ordinarizationtree || quasiordinarizationforest) {
+        m = N[1];
+        F[0] = 0;
+        for (int i = 1; i < c; i++) {
+          if (!G[i - 1] || (2 * i < c && G[2 * i - 1]) || (3 * i < c && G[3 * i - 1]))
+            F[i] = 0;
+          else
+            F[i] = 1;
+          for (int k = 2; k < c - i && F[i]; k++) {
+            if (!G[k - 1] && G[i + k - 1])
+              F[i] = 0;
+          }
+        }
+        if (ordinarizationtree) {
+          for (int i = c; i < c + m; i++) {
+            if (S[i - c])
+              M[i] = 1;
+            else
+              M[i] = 0;
+          }
+
+          count[j] = ord_descendants(N, G, M, F, c, c - indexc, m, fout);
+        } else {
+          int sc = c - 2;
+          if (!G[sc - 1]) {
+            while (!G[sc - 2])
+              sc--;
+          }
+          for (int i = sc; i < c - 1; i++) {
+            if (!G[i - 1]) {
+              M[i] = 1;
+              for (int j = m; j <= i - m && M[i]; j++) {
+                if (!G[j - 1] && !G[i - j - 1])
+                  M[i] = 0;
+              }
+            }
+          }
+          count[j] = quasiord_descendants(N, G, M, F, c, sc, c - indexc, m, fout);
+        }
+      } else
+        count[j] = descendants(N, G, S, c, indexc, c - indexc, ming, j, m_set, fout);
+    }
+    fprintf(fout, " } ");
+    if (rotated)
+      fprintf(fout, " }; \\node[align = center, right =.001\\textwidth of arbre, rotate=90]{\\resizebox{.2\\textwidth}{!}{{\\textcopyright\\, 2022, 2023, 2024 Maria Bras-Amor\\'os}}};\\end{tikzpicture}}");
+    else
+      fprintf(fout, " }; \\node[align = center, below =.001\\textwidth of arbre]{\\resizebox{.2\\textwidth}{!}{{\\textcopyright\\, 2022, 2023, 2024 Maria Bras-Amor\\'os}}};\\end{tikzpicture}}");
     if (!incremental && scaled)
       fprintf(fout, "}");
     fprintf(fout, "\n\n");
