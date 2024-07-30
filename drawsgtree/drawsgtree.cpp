@@ -28,7 +28,7 @@ long long int ng[MAX] = {1, 1, 2, 4, 7, 12, 23, 39, 67, 118, 204, 343, 592, 1001
 
 int pattern[MAX] = {1, 1, -1};
 int patternlength = 3;
-char patpolynomial[100] = "x_{1}+x_{2}-x_{3}";
+char patpolynomial[300] = "x_{1}+x_{2}-x_{3}";
 
 bool incremental = false;
 bool standalone = true;
@@ -379,7 +379,7 @@ int drawnodelist(int G[], int S[], int c, int m, int g, FILE *fout) {
 }
 
 int drawnodegenerators(int G[], int S[], int c, int m, int g, FILE *fout) {
-  int i, j, k, isgenerator, mid = 1;
+  int i, j, isgenerator, mid = 1;
   if (g == 0) {
     fprintf(fout, "{\\scalebox{5.}{$\\langle 1\\rangle$}} ");
     return 0;
@@ -416,7 +416,7 @@ int drawnodegenerators(int G[], int S[], int c, int m, int g, FILE *fout) {
 
 int drawnodegapset(int G[], int c, int m, int g, FILE *fout) {
   int i, j, q;
-  char str[100], straux[100], strtemp[100];
+  char str[300], straux[300], strtemp[300];
   if (g == 0) {
     fprintf(fout, "{$\\bullet$} ");
     return 0;
@@ -474,7 +474,7 @@ int drawnodegapseedbitstream(int G[], int S[], int c, int m, int g, FILE *fout) 
 
 int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
   int i, j, k, jant, firstrow;
-  char row[200], straux[200];
+  char row[300], straux[300];
 
   if (g == 0) {
     fprintf(fout, "{$\\bullet$} ");
@@ -763,7 +763,7 @@ int descendants(int N[], int G[], int S[], int c, int indexc, int g, int ming, i
 }
 
 int ord_descendants(int N[], int G[], int M[], int F[], int c, int g, int m, FILE *fout) {
-  int i, j, k, check, numdescendants;
+  int i, j, k, check, numdescendants=1;
   int newN[MAX], newM[MAX], newF[MAX], auxF[MAX], S[MAX];
 
   if (distinguishededges) {
@@ -783,7 +783,6 @@ int ord_descendants(int N[], int G[], int M[], int F[], int c, int g, int m, FIL
 
   GtoS(G, c, S);
   drawnode(N, G, S, c, m, g, fout);
-  numdescendants = 1;
 
   for (i = c; i < c + m; i++) {
     if (M[i]) {
@@ -853,7 +852,7 @@ int ord_descendants(int N[], int G[], int M[], int F[], int c, int g, int m, FIL
 }
 
 int quasiord_descendants(int N[], int G[], int M[], int F[], int c, int sc, int g, int m, FILE *fout) {
-  int i, j, k, check, checkf, numdescendants;
+  int i, j, k, check, checkf, numdescendants=1;
   int newN[MAX], newM[MAX], newF[MAX], auxF[MAX], S[MAX];
 
   if (distinguishededges) {
@@ -873,7 +872,6 @@ int quasiord_descendants(int N[], int G[], int M[], int F[], int c, int sc, int 
 
   GtoS(G, c, S);
   drawnode(N, G, S, c, m, g, fout);
-  numdescendants = 1;
 
   if (!G[c - 2 - 1]) {
     for (i = sc; i < c - 1; i++) {
@@ -1022,7 +1020,7 @@ int main(int argc, char *argv[]) {
   int N[50], G[50], S[50], M[50], F[50];
   long long int count[20];
   float fac, facopt = 1., facsib = 1., scale = 1.;
-  char filename[250] = "", filenameaux[250] = "", filenameinput[250] = "", patstring[100] = "", straux[100];
+  char filename[400] = "", filenameaux[400] = "", filenameinput[400] = "", patstring[300] = "", straux[400];
   FILE *fout;
   time_t seconds, secondsafter;
   bool g_set = false;
