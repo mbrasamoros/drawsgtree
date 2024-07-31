@@ -66,6 +66,15 @@ int max(int i, int j) {
   return j;
 }
 
+int prepend(char pre[], char str[])
+{
+  char aux[100];
+  strcpy(aux,pre);
+  strcat(aux,str);
+  strcpy(str,aux);
+  return 0;
+}
+
 int nongapstoG(int N[], int c, int G[]) {
   int i = 0, jN = 1;
   for (i = 0; i < c; i++) {
@@ -430,8 +439,8 @@ int drawnodegapset(int G[], int c, int m, int g, FILE *fout) {
       if (G[m * i + j - 1] && m * i + j - 1 < c) {
         if (!plain)
           fprintf(fout, "\\gapingapset{%d}", m * i + j);
-        memcpy(straux, strtemp, strlen(strtemp) + 1);
-        sprintf(strtemp, "%s%d", straux, j);
+	sprintf(straux,"%d",j);
+	strcat(strtemp,straux);
       } else {
         if (!plain)
           fprintf(fout, "\\nongapingapset{%d}", m * i + j);
@@ -440,7 +449,9 @@ int drawnodegapset(int G[], int c, int m, int g, FILE *fout) {
     if (!plain)
       fprintf(fout, "\\\\");
     memcpy(straux, str, strlen(str) + 1);
-    sprintf(str, "%s)%s", strtemp, straux);
+    strcpy(str,strtemp);
+    strcat(str,")");
+    strcat(str,straux);
   }
   fprintf(fout, "\\\\");
   fprintf(fout, "\\scalebox{4.}{%s}", str);
@@ -491,12 +502,13 @@ int drawnodeseedstable(int G[], int S[], int c, int m, int g, FILE *fout) {
   j = 1;
   for (i = 1; i < c; i++)
     if (G[i - 1]) {
+      sprintf(straux,"%d ",S[i]);
       if (S[i]) {
-        memcpy(straux, row, strlen(row) + 1);
-        sprintf(row, "%s & \\coloredseed %d ", straux, S[i]);
+	strcat(row," & \\coloredseed ");
+	strcat(row,straux);
       } else {
-        memcpy(straux, row, strlen(row) + 1);
-        sprintf(row, "%s & \\cellcolor{white} %d ", straux, S[i]);
+	strcat(row, " & \\cellcolor{white} ");
+	strcat(row,straux);
       }
       j++;
     } else {
@@ -1020,7 +1032,8 @@ int main(int argc, char *argv[]) {
   int N[50], G[50], S[50], M[50], F[50];
   long long int count[20];
   float fac, facopt = 1., facsib = 1., scale = 1.;
-  char filename[400] = "", filenameaux[400] = "", filenameinput[400] = "", patstring[300] = "", straux[400];
+  char filename[400] = "", filenameinput[400] = "", patstring[300] = "", sgstring[300]="-root",straux[400];
+  //  char filename[400] = "", filenameaux[400] = "", filenameinput[400] = "", patstring[300] = "", sgstring[300]="-",straux[400];
   FILE *fout;
   time_t seconds, secondsafter;
   bool g_set = false;
@@ -1034,7 +1047,7 @@ int main(int argc, char *argv[]) {
     case 'g':
       maxg = atoi(optarg);
       if (maxg < 0) {
-        std::cerr << "option -g must be followed by an integer in {0,1,...}" << std::endl;
+        std::cerr << "Option -g must be followed by an integer in {0,1,...}" << std::endl;
         return 1;
       }
       g_set = true;
@@ -1042,7 +1055,7 @@ int main(int argc, char *argv[]) {
     case 'm':
       m = atoi(optarg);
       if (m < 1) {
-        std::cerr << "option -m must be followed by an integer in {1,2,...}" << std::endl;
+        std::cerr << "Option -m must be followed by an integer in {1,2,...}" << std::endl;
         return 1;
       }
       m_set = true;
@@ -1054,7 +1067,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(optarg, "nputfile") == 0)
           standalone = false;
         else {
-          std::cerr << "unrecognized option -i" << (char)optopt << optarg << std::endl;
+          std::cerr << "Unrecognized option -i" << (char)optopt << optarg << std::endl;
           return 1;
         }
       }
@@ -1063,7 +1076,7 @@ int main(int argc, char *argv[]) {
       if (strcmp(optarg, "ertical") == 0)
         vertical = true;
       else {
-        std::cerr << "unrecognized option -v" << (char)optopt << optarg << std::endl;
+        std::cerr << "Unrecognized option -v" << (char)optopt << optarg << std::endl;
         return 1;
       }
       break;
@@ -1071,7 +1084,7 @@ int main(int argc, char *argv[]) {
       if (strcmp(optarg, "lain") == 0)
         plain = true;
       else {
-        std::cerr << "unrecognized option -p" << (char)optopt << optarg << std::endl;
+        std::cerr << "Unrecognized option -p" << (char)optopt << optarg << std::endl;
         return 1;
       }
       break;
@@ -1090,7 +1103,7 @@ int main(int argc, char *argv[]) {
       if (strcmp(optarg, "ramednodes") == 0)
         framednodes = true;
       else {
-        std::cerr << "unrecognized option -f" << (char)optopt << optarg << std::endl;
+        std::cerr << "Unrecognized option -f" << (char)optopt << optarg << std::endl;
         return 1;
       }
       break;
@@ -1098,7 +1111,7 @@ int main(int argc, char *argv[]) {
       if (strcmp(optarg, "lackandwhite") == 0)
         blackandwhite = true;
       else {
-        std::cerr << "unrecognized option -b" << (char)optopt << optarg << std::endl;
+        std::cerr << "Unrecognized option -b" << (char)optopt << optarg << std::endl;
         return 1;
       }
       break;
@@ -1106,7 +1119,7 @@ int main(int argc, char *argv[]) {
       if (strcmp(optarg, "otated") == 0)
         rotated = true;
       else {
-        std::cerr << "unrecognized option -r" << (char)optopt << optarg << std::endl;
+        std::cerr << "Unrecognized option -r" << (char)optopt << optarg << std::endl;
         return 1;
       }
       break;
@@ -1150,17 +1163,17 @@ int main(int argc, char *argv[]) {
         optionaperykunzposet = true;
         break;
       }
-      std::cerr << "unrecognized option -n" << optarg << std::endl;
+      std::cerr << "Unrecognized option -n" << optarg << std::endl;
       return 1;
       break;
     case 'e':
       if (strcmp(optarg, "infinitechains") == 0) {
         if (distinguishededges && !optioninfinitechains) {
-          std::cerr << "can not combine different edge distinctions " << (char)optopt << std::endl;
+          std::cerr << "Can not combine different edge distinctions " << (char)optopt << std::endl;
           return 1;
         }
         if (quasiordinarizationforest) {
-          std::cerr << "can not combine infinite chains edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+          std::cerr << "Can not combine infinite chains edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
           return 1;
         }
         distinguishededges = true;
@@ -1169,15 +1182,15 @@ int main(int argc, char *argv[]) {
       }
       if (strcmp(optarg, "med") == 0) {
         if (distinguishededges && !optionmed) {
-          std::cerr << "can not combine different edge distinctions " << (char)optopt << std::endl;
+          std::cerr << "Can not combine different edge distinctions " << (char)optopt << std::endl;
           return 1;
         }
         if (ordinarizationtree) {
-          std::cerr << "can not combine med edge distinction with the ordinarization tree " << (char)optopt << std::endl;
+          std::cerr << "Can not combine med edge distinction with the ordinarization tree " << (char)optopt << std::endl;
           return 1;
         }
         if (quasiordinarizationforest) {
-          std::cerr << "can not combine med edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+          std::cerr << "Can not combine med edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
           return 1;
         }
         distinguishededges = true;
@@ -1186,11 +1199,11 @@ int main(int argc, char *argv[]) {
       }
       if (strcmp(optarg, "pattern") == 0) {
         if (distinguishededges && !optionpattern) {
-          std::cerr << "can not combine different edge distinctions " << (char)optopt << std::endl;
+          std::cerr << "Can not combine different edge distinctions " << (char)optopt << std::endl;
           return 1;
         }
         if (quasiordinarizationforest) {
-          std::cerr << "can not combine pattern edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+          std::cerr << "Can not combine pattern edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
           return 1;
         }
         distinguishededges = true;
@@ -1203,33 +1216,33 @@ int main(int argc, char *argv[]) {
         trimnondistinguishededges = true;
         break;
       }
-      std::cerr << "unrecognized option -e" << optarg << std::endl;
+      std::cerr << "Unrecognized option -e" << optarg << std::endl;
       return 1;
       break;
     case 't':
       if (strcmp(optarg, "ordinarization") == 0 && quasiordinarizationforest == false) {
         if (optionmed) {
-          std::cerr << "can not combine med edge distinction with the ordinarization tree " << (char)optopt << std::endl;
+          std::cerr << "Can not combine med edge distinction with the ordinarization tree " << (char)optopt << std::endl;
           return 1;
         }
         ordinarizationtree = true;
       } else {
         if (strcmp(optarg, "quasiordinarization") == 0 && ordinarizationtree == false) {
           if (optionmed) {
-            std::cerr << "can not combine med edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+            std::cerr << "Can not combine med edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
             return 1;
           }
           if (optioninfinitechains) {
-            std::cerr << "can not combine infinite chains edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+            std::cerr << "Can not combine infinite chains edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
             return 1;
           }
           if (optioninfinitechains) {
-            std::cerr << "can not combine pattern edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
+            std::cerr << "Can not combine pattern edge distinction with the quasiordinarization forest " << (char)optopt << std::endl;
             return 1;
           }
           quasiordinarizationforest = true;
         } else {
-          std::cerr << "unrecognized option -t " << (char)optopt << optarg << std::endl;
+          std::cerr << "Unrecognized option -t " << (char)optopt << optarg << std::endl;
           return 1;
         }
       }
@@ -1240,7 +1253,7 @@ int main(int argc, char *argv[]) {
       break;
     case '?':
       if ((char)optopt < 49 || (char)optopt >= 58) {
-        std::cerr << "unrecognized option -" << (char)optopt << std::endl;
+        std::cerr << "Unrecognized option -" << (char)optopt << std::endl;
         return 1;
       }
       break;
@@ -1255,6 +1268,63 @@ int main(int argc, char *argv[]) {
     std::cerr << "incompatible options -incremental and -inputfile" << std::endl;
     return 1;
   }
+
+
+
+    if (incremental) {
+    sprintf(filename,"incremental");
+    standalone = 1;
+  } else {
+    if (standalone) {
+      sprintf(filename,"standalone");
+    } else {
+      sprintf(filename,"inputfile");
+    }
+  }
+
+
+  if (plain) {
+    strcat(filename,"-plain");
+  }
+
+  if (distinguishededges) {
+    if (optioninfinitechains) 
+      strcat(filename,"-infinitechains");
+    if (optionmed)
+      strcat(filename,"-med");
+    if (optionpattern) {
+      strcat(filename,"-pattern");
+      strcat(filename,patstring);
+    }
+    if (trimnondistinguishededges)
+      strcat(filename,"-trim");
+  }
+
+
+  if (optionaperykunzposet) {
+    strcat(filename,"-aperykunzposet");
+  }
+  if (optiondyckhook) {
+    strcat(filename,"-dyckhook");
+  }
+  if (optiongapseedbitstream) {
+    strcat(filename,"-gapseedbitstream");
+  }
+  if (optionseedstable) {
+    strcat(filename,"-seedstable");
+  }
+  if (optiongapset) {
+    strcat(filename,"-gapset");
+  }  
+  if (optiongenerators) {
+    strcat(filename,"-minimalgenerators");
+  }
+  if (optionlist) {
+    strcat(filename,"-list");
+  }
+
+
+
   if (argc > optind) {
     if (optionpattern && atoi(argv[optind])) {
       char termstring[100] = "";
@@ -1278,8 +1348,8 @@ int main(int argc, char *argv[]) {
           else
             sign = 1;
         } else {
-          memcpy(straux, termstring, strlen(termstring) + 1);
-          sprintf(termstring, "%s%c", straux, patstring[i]);
+	  sprintf(straux,"%d",patstring[i]);
+	  strcat(termstring,straux);
         }
       }
       pattern[patternlength] = sign * atoi(termstring);
@@ -1290,28 +1360,25 @@ int main(int argc, char *argv[]) {
       }
       strcpy(patpolynomial, "");
       if (pattern[0] > 1) {
-        memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
-        sprintf(patpolynomial, "%s%d", straux, pattern[0]);
+	sprintf(straux,"%d",pattern[0]);
+	strcat(patpolynomial,straux);
       }
-      memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
-      sprintf(patpolynomial, "%sx_{1}", straux);
+      strcat(patpolynomial,"x_{1}");
       for (j = 1; j < patternlength; j++) {
         if (pattern[j]) {
           if (pattern[j] > 0) {
-            memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
-            sprintf(patpolynomial, "%s+", straux);
+	    strcat(patpolynomial,"+");
           }
           if (pattern[j] == -1) {
-            memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
-            sprintf(patpolynomial, "%s-", straux);
+	    strcat(patpolynomial,"-");
           } else {
             if (pattern[j] != 1) {
-              memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
-              sprintf(patpolynomial, "%s%d", straux, pattern[j]);
+	      sprintf(straux,"%d",pattern[j]);
+	      strcat(patpolynomial,straux);
             }
           }
-          memcpy(straux, patpolynomial, strlen(patpolynomial) + 1);
-          sprintf(patpolynomial, "%sx_{%d}", straux, j + 1);
+	  sprintf(straux,"x_{%d}",j+1);
+	  strcat(patpolynomial,straux);
         }
       }
       std::cout << "pattern: " << patpolynomial << std::endl;
@@ -1321,161 +1388,110 @@ int main(int argc, char *argv[]) {
     } else {
       for (indexc = 0; indexc < argc - optind; indexc++) {
         N[indexc] = atoi(argv[optind + indexc]);
+	if(indexc && N[indexc]<=N[indexc-1])
+	  {
+	    std::cerr << "the given root semigroup is incorrect" << std::endl;
+	    return 1;
+	  }
       }
     }
   }
+
+
+
   if (indexc) {
     indexc--;
     while (indexc > 0 && (N[indexc] == (N[indexc - 1] + 1)))
       indexc--;
     for (j = 0; j <= indexc; j++)
+      {
       std::cout << "N[" << j << "]=" << N[j] << std::endl;
+      sprintf(straux,"%d",N[j]);
+      strcat(sgstring,straux);
+      }
     if (m_set and m != N[1]) {
-      std::cerr << "the given semigroup does not have the specified multiplicity" << std::endl;
+      std::cerr << "The given root semigroup does not have the specified multiplicity" << std::endl;
       return 1;
     } else {
       if (!issemigroup(N, indexc)) {
-        std::cerr << "the given integers do not correspond to a semigroup" << std::endl;
+        std::cerr << "The given integers do not correspond to a semigroup" << std::endl;
         return 1;
       } else {
         ming = N[indexc] - indexc;
         if (ming > maxg) {
-          std::cerr << "the final genus must be larger than the genus of the tree root" << std::endl;
+          std::cerr << "The final genus must be larger than the genus of the tree root" << std::endl;
           return 1;
         } else {
           if (ordinarizationtree) {
             if (ming != maxg) {
-              std::cerr << "the genus of the tree root must equal the genus of the tree" << std::endl;
+              std::cerr << "The genus of the tree root must equal the genus of the tree" << std::endl;
               return 1;
             }
-            sprintf(filename, "ordinarizationtree-%d-root0", maxg);
           } else {
             if (quasiordinarizationforest) {
               if (ming != maxg) {
-                std::cerr << "the genus of the root must equal the genus of the forest" << std::endl;
+                std::cerr << "The genus of the root semigroup must equal the genus of the forest" << std::endl;
                 return 1;
               }
-              sprintf(filename, "quasiordinarizationforest-%d-root0", maxg);
-            } else
-              sprintf(filename, "semigrouptree-%d-root0", maxg);
+            } 
           }
-          for (j = 1; j <= indexc; j++) {
-            memcpy(filenameaux, filename, strlen(filename) + 1);
-            sprintf(filename, "%s%d", filenameaux, N[j]);
-          }
-          memcpy(filenameaux, filename, strlen(filename) + 1);
-          sprintf(filename, "%s.tex", filenameaux);
-        }
+	}
       }
     }
   } else {
     if (m_set) {
       if (maxg < m - 1) {
-        std::cerr << "the final genus must be at least the multiplicity minus one" << std::endl;
+        std::cerr << "The final genus must be at least the multiplicity minus one" << std::endl;
         return 1;
       }
       if (ordinarizationtree) {
-        std::cerr << "the multiplicity can not be fixed in the ordinarization tree" << std::endl;
+        std::cerr << "The multiplicity can not be fixed in the ordinarization tree" << std::endl;
         return 1;
       }
       if (quasiordinarizationforest) {
-        std::cerr << "the multiplicity can not be fixed in the quasiordinarization forest" << std::endl;
+        std::cerr << "The multiplicity can not be fixed in the quasiordinarization forest" << std::endl;
         return 1;
       }
       indexc = 1;
       N[0] = 0;
       N[1] = m;
+      sprintf(straux,"0%d",m);
+      strcat(sgstring,straux);
       ming = m - 1;
-      sprintf(filename, "semigrouptree-%d-root0%d.tex", maxg, m);
     } else {
       N[0] = 0;
       if (ordinarizationtree) {
         indexc = 1;
         N[1] = maxg + 1;
-        sprintf(filename, "ordinarizationtree-%d.tex", maxg);
       } else {
         indexc = 0;
-        if (quasiordinarizationforest)
-          sprintf(filename, "ordinarizationforest-%d.tex", maxg);
-        else {
           N[1] = 1;
-          sprintf(filename, "semigrouptree-%d.tex", maxg);
-        }
       }
     }
   }
+
+  if(ordinarizationtree)
+    strcat(filename,"-ordinarizationtree-");
+  else
+    {
+      if(quasiordinarizationforest)
+	strcat(filename,"-quasiordinarizationforest-");
+      else
+	strcat(filename,"-semigrouptree-");
+    }
+  sprintf(straux,"g%d",maxg);
+  strcat(filename,straux);
+  if(m_set)
+    {
+      sprintf(straux,"-m%d",m);
+      strcat(filename,straux);
+    }
+  if(!quasiordinarizationforest && (((!ordinarizationtree)&&N[1]>1)||(ordinarizationtree&&(N[1]!=maxg+1))))
+    strcat(filename,sgstring);
+  strcat(filename,".tex");
+  
   c = N[indexc];
 
-  if (optionlist) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "list-%s", filenameaux);
-  }
-  if (optiongenerators) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "minimalgenerators-%s", filenameaux);
-  }
-  if (optiongapset) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "gapset-%s", filenameaux);
-  }
-  if (optionseedstable) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "seedstable-%s", filenameaux);
-  }
-  if (optiongapseedbitstream) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "gapseedbitstream-%s", filenameaux);
-  }
-  if (optiondyckhook) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "dyckhook-%s", filenameaux);
-  }
-  if (optionaperykunzposet) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "aperykunzposet-%s", filenameaux);
-  }
-  if (distinguishededges) {
-    if (optioninfinitechains) {
-      memcpy(filenameaux, filename, strlen(filename) + 1);
-      if (trimnondistinguishededges)
-        sprintf(filename, "infinitechains-trim-%s", filenameaux);
-      else
-        sprintf(filename, "infinitechains-%s", filenameaux);
-    }
-    if (optionmed) {
-      memcpy(filenameaux, filename, strlen(filename) + 1);
-      if (trimnondistinguishededges)
-        sprintf(filename, "med-trim-%s", filenameaux);
-      else
-        sprintf(filename, "med-%s", filenameaux);
-    }
-    if (optionpattern) {
-      memcpy(filenameaux, filename, strlen(filename) + 1);
-      if (trimnondistinguishededges)
-        sprintf(filename, "pattern%s-trim-%s", patstring, filenameaux);
-      else
-        sprintf(filename, "pattern%s-%s", patstring, filenameaux);
-    }
-  }
-
-  if (plain) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "plain-%s", filenameaux);
-  }
-
-  if (incremental) {
-    memcpy(filenameaux, filename, strlen(filename) + 1);
-    sprintf(filename, "incremental-%s", filenameaux);
-    standalone = 1;
-  } else {
-    if (standalone) {
-      memcpy(filenameaux, filename, strlen(filename) + 1);
-      sprintf(filename, "standalone-%s", filenameaux);
-    } else {
-      memcpy(filenameaux, filename, strlen(filename) + 1);
-      sprintf(filename, "inputfile-%s", filenameaux);
-    }
-  }
 
   if (!defaultfilename)
     strcpy(filename, filenameinput);
